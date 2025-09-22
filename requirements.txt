@@ -1,0 +1,9 @@
+numpy
+pandas
+PyPDF2
+chromadb
+scikit-learn
+langchain
+pypdf
+pytest
+pytest-cov

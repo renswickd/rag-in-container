@@ -1,0 +1,7 @@
+.env
+__pycache__/
+.pytest_cache/
+.vscode/
+chromadb/
+.DS_Store
+.coverage
