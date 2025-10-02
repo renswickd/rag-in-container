@@ -5,3 +5,8 @@ __pycache__/
 chromadb/
 .DS_Store
 .coverage
+_draft.py
+_draft1.py
+chroma_db/
+data/pr_metadata.csv
+data/
