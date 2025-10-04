@@ -10,3 +10,4 @@ _draft1.py
 chroma_db/
 data/pr_metadata.csv
 data/
+.coverage

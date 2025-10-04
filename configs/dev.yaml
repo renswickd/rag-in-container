@@ -1,0 +1,28 @@
+env: dev
+
+retrieval:
+  k: 4
+
+embedding:
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+
+vector_store:
+  persist_directory: chroma_db
+  collection_name: policy_docs
+
+ingestion:
+  pdf_dir: data/policy_documents
+  chunk_size: 750
+  chunk_overlap: 200
+  separators: ["\n\n", "\n", " ", ""]
+
+metadata:
+  csv_path: data/metadata/pr_metadata.csv
+
+llm:
+  provider: groq
+  model: openai/gpt-oss-20b
+  temperature: 0
+  # max_tokens: 2048
+  # timeout: 60
+
