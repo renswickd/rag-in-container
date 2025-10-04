@@ -5,31 +5,53 @@ The RAG Policy Assistant is a Retrieval-Augmented Generation (RAG) application d
 ### Project Structure
 
 ```
-rag-policy-assistant
-├── src
-│   ├── components
-│   │   ├── document_loader.py       # Loads PDF documents from the data/policy_documents/ directory.
-│   │   ├── document_processor.py     # Processes loaded documents for analysis and embedding.
-│   │   ├── embedding_manager.py      # Manages embedding of documents and metadata into Chroma DB.
-│   │   ├── knowledge_graph.py        # Constructs a knowledge graph from embedded documents and metadata.
-│   │   ├── metadata_handler.py       # Manages loading and processing of policy_records_metadata.csv.
-│   │   ├── query_engine.py           # Handles user queries and retrieves information from the knowledge graph.
-│   │   └── rag_nodes.py              # Defines nodes used in the Retrieval-Augmented Generation process.
-│   ├── config
-│   │   └── settings.py               # Contains configuration settings for the application.
-│   ├── data
-│   │   ├── policy_documents           # Directory for policy documents (PDFs).
-│   │   └── policy_records_metadata.csv # Metadata related to the policy documents.
-│   ├── utils
-│   │   ├── logger.py                  # Provides logging functionality for the application.
-│   │   └── helpers.py                 # Contains utility functions for various tasks.
-│   ├── chromadb                       # Directory for Chroma DB files.
-│   └── main.py                        # Entry point of the application.
-├── tests                              # Directory for unit tests.
-├── .env                               # Environment variables for the application.
-├── .gitignore                         # Specifies files to be ignored by version control.
-├── requirements.txt                   # Lists dependencies required for the project.
-└── README.md                          # Documentation for the project.
+policy-assistant/
+├─ apps/
+│  ├─ cli_chat.py                 # Local CLI entrypoint (reads .env, runs chat loop with thread_id)
+│  └─ api/
+│     └─ main.py                  # (Optional) FastAPI app for dev testing
+│
+├─ graphs/
+│  ├─ policy_graph.py             # Graph wiring: retrieve → agent → generate (+ memory)
+│  └─ nodes/
+│     ├─ retrieve.py              # Retrieve node (Chroma retriever)
+│     ├─ agent.py                 # ReAct agent node (LangGraph prebuilt + tool bindings)
+│     └─ generate.py              # Final response node (uses retrieved context + metadata)
+│
+├─ tools/
+│  ├─ metadata_tool.py            # @tool lookup_policy_metadata (reads CSV)
+│  └─ __init__.py
+│
+├─ pipeline/
+│  ├─ ingest_pdfs.py              # Ingestion: load PDFs, chunk, embed, persist to Chroma
+│  ├─ hygiene.py                  # Vector hygiene (dedupe, re-embed changed, manifests)
+│  └─ schema.py                   # Metadata schema helpers (title, section, version, etc.)
+│
+├─ data/
+│  ├─ pdfs/                       # Source policy PDFs (dev)
+│  ├─ metadata/
+│  │  └─ pr_metadata.csv          # Policy metadata (dev)
+│
+├─ chroma_db/                     # Persisted Chroma collection (dev)
+│
+├─ configs/
+│  ├─ dev.yaml                    # Single source of truth: k, models, chunking, guardrails toggles
+│  └─ logging.yaml                # Optional structured logging config
+│
+├─ tests/
+|  ├─ test_ingest_pdfs.py          # UNIT - ingestion pipeline
+│
+├─ docs/
+│  ├─ README-dev.md               # How to run locally (env, commands, flow)
+│  ├─ ingestion.md                # Chunking, schema, hygiene runbook
+│
+├─ .env.example                   # GROQ_API_KEY=... 
+├─ .env                           # Local secrets (gitignored)
+├─ .gitignore
+├─ requirements.txt               # Python dependencies
+├─ setup.py                       # Package setup
+└─ README.md                      # Project overview
+
 ```
 
 ### Installation

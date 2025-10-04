@@ -7,7 +7,7 @@
 4. Put PDFs under `data/policy_documents/` and metadata CSV at `data/metadata/pr_metadata.csv`
 5. `python -m pipeline.ingest_pdfs`
 6. `python -m apps.cli_chat`
-
+`
 ## Config
 See `configs/dev.yaml`.
 
