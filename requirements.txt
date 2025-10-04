@@ -4,6 +4,8 @@ PyPDF2
 chromadb
 scikit-learn
 langchain
+langgraph
+sentence-transformers
 pypdf
 pytest
 pytest-cov
