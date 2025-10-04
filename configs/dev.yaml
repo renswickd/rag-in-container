@@ -23,6 +23,7 @@ llm:
   provider: groq
   model: openai/gpt-oss-20b
   temperature: 0
+  api_key: $"{GROQ_API_KEY}"
   # max_tokens: 2048
   # timeout: 60
 
