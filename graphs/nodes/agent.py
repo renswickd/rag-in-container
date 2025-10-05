@@ -5,7 +5,6 @@ from tools.metadata_tool import lookup_policy_metadata
 from common.config import load_config
 from common.llm import get_llm
 
-_cfg = load_config()
 _TOOLS = [lookup_policy_metadata]
 
 def agent_node(state):
