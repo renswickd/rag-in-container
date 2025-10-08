@@ -2,8 +2,8 @@ import os
 import sys
 from rich.console import Console
 from langchain_core.messages import HumanMessage, AIMessage
-
 from graphs.policy_graph import build_graph
+from common.logger_util import init_logger
 
 console = Console()
 APP = build_graph()
@@ -52,6 +52,10 @@ def chat_loop(thread_id: str = "dev-thread-001"):
             break
 
 if __name__ == "__main__":
-    tid = sys.argv[1] if len(sys.argv) > 1 else "dev-thread-001"
-    print(f"Thread ID: {tid}")
-    chat_loop(tid)
+    # tid = sys.argv[1] if len(sys.argv) > 1 else "dev-thread-001"
+    # print(f"Thread ID: {tid}")
+
+    session_id = os.getenv("SESSION_ID", None)  # or None
+    logger, session_path = init_logger(name="policy", session_id=session_id, level=20)
+    
+    chat_loop(session_id)

@@ -2,7 +2,6 @@ from langchain_core.messages import SystemMessage, ToolMessage, HumanMessage
 from langgraph.prebuilt import create_react_agent
 
 from tools.metadata_tool import lookup_policy_metadata
-from common.config import load_config
 from common.llm import get_llm
 
 _TOOLS = [lookup_policy_metadata]
