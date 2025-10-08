@@ -17,6 +17,7 @@ def get_retriever():
 
 def retrieve_node(state):
     """Retrieve top-k docs from Chroma and set `context`."""
+    print("----- NODE CALL: retrieve_node -----")
     retriever = get_retriever()
     user_msgs = [m for m in state["messages"] if isinstance(m, HumanMessage)]
     user_query = user_msgs[-1].content if user_msgs else ""
@@ -28,4 +29,5 @@ def retrieve_node(state):
         text = d.page_content.replace("\n", " ")
         snippets.append(f"[Source: {src}] {text}")
     context_block = "\n\n".join(snippets) if snippets else "No relevant chunks were found."
+    print(f"[DEBUG] Retrieved {len(snippets)} relevant chunks")
     return {"context": context_block}
