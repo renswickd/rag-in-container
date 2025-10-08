@@ -1,13 +1,12 @@
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from common.config import load_config
 from common.llm import get_llm
+from common.logger_util import init_logger
 
-_cfg = load_config()
-
+logger, _ = init_logger()
 
 def generate_node(state):
     """Compose final answer from retrieved context + optional metadata."""
-    print("----- NODE CALL: generate_node -----")
+    logger.debug("----- NODE CALL: generate_node -----")
     llm = get_llm()
 
     # Get conversation history
@@ -24,7 +23,6 @@ def generate_node(state):
 
     meta_block = state.get("metadata_text", "").strip()
     meta_section = f"\n\n[Metadata]\n{meta_block}" if meta_block else ""
-    
     context_block = state.get("context", "").strip()
 
     sys = SystemMessage(content=(
