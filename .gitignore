@@ -11,3 +11,6 @@ chroma_db/
 data/pr_metadata.csv
 data/
 .coverage
+logs/
+*_db/
+data/*.json

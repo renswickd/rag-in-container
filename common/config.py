@@ -1,4 +1,3 @@
-from pathlib import Path
 import os
 import yaml
 from dotenv import load_dotenv

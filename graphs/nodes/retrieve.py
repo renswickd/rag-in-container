@@ -1,10 +1,11 @@
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.messages import HumanMessage
-
+from common.logger_util import init_logger
 from common.config import load_config
 
 _cfg = load_config()
+logger, _ = init_logger()
 
 def get_retriever():
     embeddings = HuggingFaceEmbeddings(model_name=_cfg["embedding"]["model_name"])
@@ -17,6 +18,7 @@ def get_retriever():
 
 def retrieve_node(state):
     """Retrieve top-k docs from Chroma and set `context`."""
+    logger.debug("----- NODE CALL: retrieve_node -----")
     retriever = get_retriever()
     user_msgs = [m for m in state["messages"] if isinstance(m, HumanMessage)]
     user_query = user_msgs[-1].content if user_msgs else ""
@@ -28,4 +30,5 @@ def retrieve_node(state):
         text = d.page_content.replace("\n", " ")
         snippets.append(f"[Source: {src}] {text}")
     context_block = "\n\n".join(snippets) if snippets else "No relevant chunks were found."
+    # logger.debug(f"Retrieved {len(snippets)} relevant chunks")
     return {"context": context_block}
