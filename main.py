@@ -7,7 +7,7 @@ from common.logger_util import init_logger
 console = Console()
 APP = build_graph()
 
-def chat_loop(thread_id: str = "dev-thread-001", logger=None):
+def chat_loop(thread_id: str, logger=None):
     console.print("[bold green]Policy Assistant (dev) — type 'exit' or 'quit' to quit[/bold green]")
     
     # Initialize conversation history
@@ -57,6 +57,6 @@ def chat_loop(thread_id: str = "dev-thread-001", logger=None):
 if __name__ == "__main__":
 
     session_id = os.getenv("SESSION_ID", None)
-    logger, session_path = init_logger(name="policy", session_id=session_id, level=20)
+    logger, session_path = init_logger(name="policy", session_id=session_id)
     
     chat_loop(session_id, logger)
