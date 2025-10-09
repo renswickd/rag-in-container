@@ -5,18 +5,27 @@ from dataclasses import asdict
 from datetime import datetime
 from pipeline.hygiene import file_sha256
 from pipeline.schema import DocMeta
+from common.logger_util import init_logger
 
 class DocumentTracker:
     def __init__(self, track_file: str = "data/document_registry.json"):
         self.track_file = Path(track_file)
         self.registry: Dict[str, dict] = self._load_registry()
+        self.logger = init_logger()[0]
 
     def _load_registry(self) -> Dict[str, dict]:
         """Load existing document registry or create new one"""
         if self.track_file.exists():
             with self.track_file.open('r') as f:
-                return json.load(f)
-        return {}
+                try:
+                    registry = json.load(f)
+                    if not isinstance(registry, dict) or not registry:
+                        # self.logger.warning("Invalid document registry")
+                        return {}
+                    return registry
+                except json.JSONDecodeError:
+                    # self.logger.warning("Invalid JSON in document registry")
+                    return {}
 
     def _save_registry(self) -> None:
         """Save registry to disk"""

@@ -8,9 +8,10 @@ from typing import Optional, Tuple
 LOG_ROOT = Path("logs")
 SESSION_PREFIX = "session-"
 KEEP_SESSIONS = 5
+PROCESSED_DOCS_DIR = "processed_docs"
 
 def _slug_timestamp() -> str:
-    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S") # e.g. 2025-10-08_14-32-10
+    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 def _ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
@@ -21,19 +22,42 @@ def _list_sessions(log_root: Path) -> list[Path]:
     return sorted(
         [p for p in log_root.iterdir() if p.is_dir() and p.name.startswith(SESSION_PREFIX)],
         key=lambda p: p.stat().st_mtime,
-        reverse=True,  # newest first
+        reverse=True, 
     )
 
+def _copy_document(src_path: Path, dest_dir: Path) -> Path:
+    """Copy a document to the processed_docs directory while preserving metadata"""
+    dest_path = dest_dir / src_path.name
+    shutil.copy(src_path, dest_path)  # copy2 preserves metadata
+    return dest_path
+
+def get_processed_docs_dir(session_path: Path) -> Path:
+    """Get the processed_docs directory for a session"""
+    docs_dir = session_path / PROCESSED_DOCS_DIR
+    _ensure_dir(docs_dir)
+    return docs_dir
+
+def track_processed_document(session_path: Path, doc_path: Path) -> Path:
+    """
+    Copy a processed document to the session's processed_docs directory
+    Returns the path to the copied document
+    """
+    docs_dir = get_processed_docs_dir(session_path)
+    return _copy_document(doc_path, docs_dir)
+
 def purge_old_sessions(log_root: Path = LOG_ROOT, keep: int = KEEP_SESSIONS) -> None:
+    """
+    Keep only the N most recent sessions, remove others including their processed_docs
+    """
     sessions = _list_sessions(log_root)
     if len(sessions) <= keep:
         return
+    
     for old in sessions[keep:]:
         try:
             shutil.rmtree(old)
         except Exception as e:
-            # We don't raise, just warn on console so app continues
-            print(f"[WARN] Failed to remove old session logs at {old}: {e}")
+            print(f"[WARN] Failed to remove old session at {old}: {e}")
 
 def init_logger(
     name: str = "policy",
@@ -42,8 +66,8 @@ def init_logger(
     propagate: bool = False,
 ) -> Tuple[logging.Logger, Path]:
     """
-    Create a session-scoped logger and file under logs/<session-id>/app.log.
-    Also purges logs to keep only the last N sessions.
+    Create a session-scoped logger and file under logs/<session-id>/
+    Also creates a processed_docs directory for document tracking
     """
     # 1) Ensure logs root exists & purge old sessions
     _ensure_dir(LOG_ROOT)
@@ -53,6 +77,9 @@ def init_logger(
     session_id = session_id or f"{SESSION_PREFIX}{_slug_timestamp()}"
     session_path = LOG_ROOT / session_id
     _ensure_dir(session_path)
+    
+    # # Create processed_docs directory
+    # processed_docs_dir = get_processed_docs_dir(session_path)
 
     log_file = session_path / "app.log"
 
@@ -86,6 +113,7 @@ def init_logger(
     logger.info("Logging initialized")
     logger.info(f"Session ID: {session_id}")
     logger.info(f"Log file  : {log_file.resolve()}")
+    # logger.info(f"Processed documents dir: {processed_docs_dir.resolve()}")
     logger.info("────────────────────────────────────────────────────────")
 
     return logger, session_path
