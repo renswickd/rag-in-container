@@ -9,6 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from common.config import load_config
 from pipeline.document_tracker import DocumentTracker
 from pipeline.schema import DocMeta
+from common.logger_util import init_logger
 
 def load_pdfs(pdf_dir: Path, tracker: DocumentTracker) -> List:
     """Load only unprocessed PDFs"""
@@ -39,6 +40,7 @@ def load_pdfs(pdf_dir: Path, tracker: DocumentTracker) -> List:
     return docs
 
 def main():
+    logger, _ = init_logger()
     cfg = load_config()
     pdf_dir = Path(cfg["ingestion"]["pdf_dir"])
     persist_dir = cfg["vector_store"]["persist_directory"]
@@ -51,10 +53,11 @@ def main():
     docs = load_pdfs(pdf_dir, tracker)
     
     if not docs:
-        print("[INGEST] No new PDFs to process.")
+        logger.info("[INGEST] No new PDFs to process.")
         return
     
-    print(f"[INGEST] Processing {len(docs)} new documents")
+    logger.info(f"[INGEST] Processing {len(docs)} new documents")
+    logger.info(f"[INGEST] Processed files: {tracker.get_processed_files()}")
     
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=cfg["ingestion"]["chunk_size"],
@@ -73,9 +76,9 @@ def main():
     
     # Add new chunks to existing collection
     vectordb.add_documents(chunks)
-    print(f"[INGEST] Added new chunks to Chroma at: {Path(persist_dir).resolve()}")
+    logger.info(f"[INGEST] Added new chunks to Chroma at: {Path(persist_dir).resolve()}")
     
-    # Print summary
+    # draft - print ingestion summary
     print("\nIngestion Summary:")
     print(f"- Total files processed: {len(tracker.get_processed_files())}")
     print(f"- New files in this run: {len(docs)}")
