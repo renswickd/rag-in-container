@@ -9,7 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from common.config import load_config
 from pipeline.document_tracker import DocumentTracker
 from pipeline.schema import DocMeta
-from common.logger_util import init_logger #, track_processed_document
+from common.logger_util import init_logger
 import sys
 from typing import List
 
@@ -30,10 +30,6 @@ def load_pdfs(pdf_dir: Path, tracker: DocumentTracker, session_path: Path, logge
                 title=p.stem,
                 effective_date=datetime.now().strftime("%Y-%m-%d")
             )
-            
-            # # Save copy to session's processed_docs directory
-            # archived_path = track_processed_document(session_path, p)
-            # logger.info(f"Archived copy at: {archived_path}")
             
             # Register document
             tracker.register_document(p, meta)

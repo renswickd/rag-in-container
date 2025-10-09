@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple
 
-# Constants
 LOG_ROOT = Path("logs")
 SESSION_PREFIX = "session-"
 KEEP_SESSIONS = 5
@@ -30,20 +29,6 @@ def _copy_document(src_path: Path, dest_dir: Path) -> Path:
     dest_path = dest_dir / src_path.name
     shutil.copy(src_path, dest_path)  # copy2 preserves metadata
     return dest_path
-
-def get_processed_docs_dir(session_path: Path) -> Path:
-    """Get the processed_docs directory for a session"""
-    docs_dir = session_path / PROCESSED_DOCS_DIR
-    _ensure_dir(docs_dir)
-    return docs_dir
-
-def track_processed_document(session_path: Path, doc_path: Path) -> Path:
-    """
-    Copy a processed document to the session's processed_docs directory
-    Returns the path to the copied document
-    """
-    docs_dir = get_processed_docs_dir(session_path)
-    return _copy_document(doc_path, docs_dir)
 
 def purge_old_sessions(log_root: Path = LOG_ROOT, keep: int = KEEP_SESSIONS) -> None:
     """
@@ -77,9 +62,6 @@ def init_logger(
     session_id = session_id or f"{SESSION_PREFIX}{_slug_timestamp()}"
     session_path = LOG_ROOT / session_id
     _ensure_dir(session_path)
-    
-    # # Create processed_docs directory
-    # processed_docs_dir = get_processed_docs_dir(session_path)
 
     log_file = session_path / "app.log"
 
@@ -102,24 +84,16 @@ def init_logger(
     fh.setFormatter(fmt)
     logger.addHandler(fh)
 
-    # # Console handler
-    # ch = logging.StreamHandler()
-    # ch.setLevel(level)
-    # ch.setFormatter(fmt)
-    # logger.addHandler(ch)
-
     # Small header to mark new session starts
     logger.info("────────────────────────────────────────────────────────")
     logger.info("Logging initialized")
     logger.info(f"Session ID: {session_id}")
     logger.info(f"Log file  : {log_file.resolve()}")
-    # logger.info(f"Processed documents dir: {processed_docs_dir.resolve()}")
     logger.info("────────────────────────────────────────────────────────")
 
     return logger, session_path
 
 def _remove_existing_handlers(logger: logging.Logger) -> None:
-    # Remove any pre-existing handlers to prevent duplicate logs
     for h in list(logger.handlers):
         logger.removeHandler(h)
         try:
