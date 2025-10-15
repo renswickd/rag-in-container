@@ -1,0 +1,37 @@
+.main-header {
+    color: #1E88E5;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.chat-container {
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    margin-bottom: 5rem;
+}
+
+.stExpander {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.input-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    padding: 1rem 5rem;
+    border-top: 1px solid #e0e0e0;
+    z-index: 1000;
+}
+
+.main-content {
+    padding-bottom: 80px;
+}
+
+.chat-message {
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+}
