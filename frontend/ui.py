@@ -12,16 +12,6 @@ from graphs.policy_graph import build_graph
 from langchain_core.messages import HumanMessage, AIMessage
 from common.logger_util import init_logger
 
-# Sample prompts for quick access
-SAMPLE_PROMPTS = {
-    "Cloud Access": "What are the requirements for accessing cloud services?",
-    "Data Privacy": "What are the key points in the Data Privacy Policy?",
-    "Policy Ownership": "Who is responsible for maintaining the Security Policy?",
-    "Review Cycles": "How often are policies reviewed?",
-    "Incident Response": "What steps should I take during a security incident?",
-    "Data Sharing": "What's the process for sharing data with vendors?",
-}
-
 def initialize_session_state():
     """Initialize Streamlit session state variables"""
     if "messages" not in st.session_state:
@@ -39,7 +29,6 @@ def format_references(context: str) -> str:
     if not context:
         return "No references available"
     
-    # Split context into individual document references
     references = context.split("\n\n")
     formatted_refs = []
     
@@ -53,11 +42,9 @@ def format_references(context: str) -> str:
 
 def process_query(query: str) -> tuple[str, str]:
     """Process user query and return response with references"""
-    # Add user message to history
     current_message = HumanMessage(content=query)
     st.session_state.conversation_history.append(current_message)
     
-    # Prepare initial state
     init_state = {
         "messages": st.session_state.conversation_history.copy(),
         "context": "",
@@ -65,21 +52,16 @@ def process_query(query: str) -> tuple[str, str]:
         "tool_called": False,
     }
     
-    # Get response from RAG pipeline
     final_state = st.session_state.app.invoke(
         init_state,
         config={"configurable": {"thread_id": "streamlit-session"}},
     )
     
-    # Extract response and context
     msgs = final_state["messages"]
     ai_msgs = [m for m in msgs if isinstance(m, AIMessage)]
     response = ai_msgs[-1].content if ai_msgs else "(no response)"
     
-    # Add assistant's response to history
     st.session_state.conversation_history.append(AIMessage(content=response))
-    
-    # Get context for references
     context = final_state.get("context", "")
     
     return response, context
@@ -93,45 +75,87 @@ def main():
     
     initialize_session_state()
     
-    # Title and description
-    st.title("📚 Policy Assistant")
+    # Custom CSS for better styling
     st.markdown("""
-    Get instant answers about company policies. Ask questions in natural language or 
-    use the sample prompts below.
+        <style>
+        .main-header {
+            color: #1E88E5;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .chat-container {
+            padding: 1rem;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            margin-bottom: 5rem;  /* Space for input box */
+        }
+        .stExpander {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* Fixed input container at bottom */
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            padding: 1rem 5rem;
+            border-top: 1px solid #e0e0e0;
+            z-index: 1000;
+        }
+        /* Adjust main content padding */
+        .main-content {
+            padding-bottom: 80px;  /* Height of input container */
+        }
+        /* Style chat messages */
+        .chat-message {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Header
+    st.markdown("<h1 class='main-header'>📚 Policy Assistant</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    Ask questions about company policies and get instant answers with references to source documents.
     """)
     
-    # Sidebar with sample prompts
-    with st.sidebar:
-        st.header("📝 Sample Prompts")
-        for title, prompt in SAMPLE_PROMPTS.items():
-            if st.button(f"▶️ {title}"):
-                st.session_state.messages.append({"role": "user", "content": prompt})
+    # Main content area with messages
+    with st.container():
+        st.markdown("<div class='main-content'>", unsafe_allow_html=True)
+        
+        # Display chat history
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+                if message["role"] == "assistant" and "context" in message:
+                    with st.expander("📑 View Source Documents", expanded=False):
+                        st.markdown(format_references(message["context"]))
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
-    # Main chat interface
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-    
-    # Chat input
-    if prompt := st.chat_input("Ask about policies..."):
-        # Add user message to chat
+    # Fixed input container at bottom
+    st.markdown("<div class='input-container'>", unsafe_allow_html=True)
+    if prompt := st.chat_input("Ask about policies...", key="chat_input"):
+        # Add user message
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-            
-        # Get response and references
-        with st.spinner("Thinking..."):
+        
+        # Get response
+        with st.spinner("Searching policies..."):
             response, context = process_query(prompt)
         
-        # Display assistant response
-        with st.chat_message("assistant"):
-            st.markdown(response)
-            
-            # Display references in expandable section
-            with st.expander("📚 View References", expanded=False):
-                st.markdown(format_references(context))
-            
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        # Add assistant response with context
+        st.session_state.messages.append({
+            "role": "assistant", 
+            "content": response,
+            "context": context
+        })
+        
+        # Rerun to update UI
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
