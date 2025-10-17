@@ -5,7 +5,11 @@ from pipeline.storage.vector_store import VectorStore
 from pipeline.storage.document_store import DocumentStore
 from pipeline.ingestion.loader import DocumentLoader
 from pipeline.ingestion.processor import DocumentProcessor
+from common.config import load_config
 from typing import Optional
+
+# Load configuration
+config = load_config()
 
 def process_uploaded_file(
     uploaded_file,
@@ -16,7 +20,7 @@ def process_uploaded_file(
     """Process a single uploaded file"""
     try:
         # Create temp directory if not exists
-        temp_dir = Path("temp_uploads")
+        temp_dir = Path(config["storage"]["temp_dir"])
         temp_dir.mkdir(exist_ok=True)
         temp_path = temp_dir / uploaded_file.name
         
@@ -26,9 +30,13 @@ def process_uploaded_file(
         
         # Initialize components
         loader = DocumentLoader(tracker, doc_store)
-        processor = DocumentProcessor(vector_store)
+        processor = DocumentProcessor(
+            vector_store,
+            chunk_size=config["processing"]["chunk_size"],
+            chunk_overlap=config["processing"]["chunk_overlap"]
+        )
         
-        # Load documents - pass the parent directory
+        # Load documents
         documents = loader.load_documents(temp_dir.parent)
         
         if not documents:

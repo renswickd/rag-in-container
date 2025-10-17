@@ -1,13 +1,17 @@
 import pandas as pd
 from pathlib import Path
 from langchain_core.tools import tool
+from common.config import load_config
+
+# Load configuration
+config = load_config()
 
 # Constants
 METADATA_CSV_PATH = "data/metadata/pr_metadata.csv"
 
 def load_metadata_df() -> pd.DataFrame:
     """Load policy metadata from CSV file"""
-    path = Path(METADATA_CSV_PATH)
+    path = Path(config["storage"]["metadata_csv"])
     print(f"[INFO] Loading metadata from {path}")
     return pd.read_csv(path)
 

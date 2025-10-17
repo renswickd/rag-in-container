@@ -2,13 +2,20 @@ from pathlib import Path
 from typing import List, Optional
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from ..storage.vector_store import VectorStore
+from common.config import load_config
 
 class DocumentProcessor:
-    def __init__(self, vector_store: VectorStore):
+    def __init__(
+        self, 
+        vector_store: VectorStore,
+        chunk_size: int = None,
+        chunk_overlap: int = None
+    ):
         self.vector_store = vector_store
+        config = load_config()
         self.splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
+            chunk_size=chunk_size or config["processing"]["chunk_size"],
+            chunk_overlap=chunk_overlap or config["processing"]["chunk_overlap"],
         )
 
     def process_documents(self, documents: List) -> bool:
