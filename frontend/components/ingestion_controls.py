@@ -7,6 +7,49 @@ from pipeline.ingestion.loader import DocumentLoader
 from pipeline.ingestion.processor import DocumentProcessor
 from typing import Optional
 
+def process_uploaded_file(
+    uploaded_file,
+    doc_store: DocumentStore,
+    vector_store: VectorStore,
+    tracker: DocumentTracker
+) -> bool:
+    """Process a single uploaded file"""
+    try:
+        # Create temp directory if not exists
+        temp_dir = Path("temp_uploads")
+        temp_dir.mkdir(exist_ok=True)
+        temp_path = temp_dir / uploaded_file.name
+        
+        # Save uploaded file
+        with open(temp_path, "wb") as f:
+            f.write(uploaded_file.getvalue())
+        
+        # Initialize components
+        loader = DocumentLoader(tracker, doc_store)
+        processor = DocumentProcessor(vector_store)
+        
+        # Load documents - pass the parent directory
+        documents = loader.load_documents(temp_dir.parent)
+        
+        if not documents:
+            st.error(f"No content extracted from {uploaded_file.name}")
+            return False
+            
+        # Process and add to vector store
+        success = processor.process_documents(documents)
+        
+        # Cleanup
+        temp_path.unlink()
+        
+        if success:
+            st.session_state["show_processed"] = True
+        
+        return success
+        
+    except Exception as e:
+        st.error(f"Error processing {uploaded_file.name}: {str(e)}")
+        return False
+
 def render_ingestion_sidebar(
     tracker: DocumentTracker,
     vector_store: VectorStore,
@@ -16,28 +59,47 @@ def render_ingestion_sidebar(
     with st.sidebar:
         st.header("📁 Document Management")
         
-        # Status Section
-        st.subheader("Status", divider="gray")
-        stats = vector_store.get_stats()
-        st.metric("Total Documents", f"{stats['total_documents']}")
+        # File Upload Section
+        st.subheader("Upload Documents", divider="gray")
+        uploaded_files = st.file_uploader(
+            "Upload PDF files",
+            type=["pdf"],
+            accept_multiple_files=True,
+            help="Upload one or more PDF files to be processed"
+        )
+        
+        if uploaded_files:
+            with st.spinner("Processing documents..."):
+                for uploaded_file in uploaded_files:
+                    if process_uploaded_file(uploaded_file, doc_store, vector_store, tracker):
+                        st.success(f"✅ Processed: {uploaded_file.name}")
+                    else:
+                        st.error(f"❌ Failed to process: {uploaded_file.name}")
         
         # Document List
-        processed_files = tracker.get_processed_files()
-        if processed_files:
-            with st.expander("📑 Processed Documents"):
-                for doc_path in processed_files:
-                    st.text(Path(doc_path).name)
+        if st.session_state.get("show_processed", False):
+            with st.expander("📑 Processed Documents", expanded=True):
+                processed_files = tracker.get_processed_files()
+                if processed_files:
+                    for doc_path in processed_files:
+                        st.text(Path(doc_path).name)
+                else:
+                    st.info("No documents processed yet")
         
-        # Vector DB Stats
-        if st.button("🔄 Refresh Stats"):
-            st.experimental_rerun()
-        
-        # Dangerous Operations
+        # Maintenance Section
         st.subheader("Maintenance", divider="gray")
-        with st.expander("⚠️ Reset"):
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Refresh"):
+                st.session_state.show_processed = True
+                st.rerun()
+        
+        # Reset Option
+        with st.expander("⚠️ Danger Zone"):
+            st.warning("This will delete all embedded documents!")
             if st.button("Reset Vector DB", type="primary"):
-                st.warning("This will delete all embedded documents!")
-                if st.button("Confirm Reset"):
+                confirm = st.button("Confirm Reset")
+                if confirm:
                     vector_store.reset()
                     st.success("Vector DB reset successfully")
-                    st.experimental_rerun()
+                    st.rerun()

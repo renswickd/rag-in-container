@@ -12,7 +12,9 @@ from frontend.components.header import render_header
 from frontend.components.chat_interface import render_chat_interface
 from frontend.components.ingestion_controls import render_ingestion_sidebar
 from frontend.utils.session_manager import initialize_session_state
-from pipeline.document_tracker import DocumentTracker
+from pipeline.utils.document_tracker import DocumentTracker
+from pipeline.storage.document_store import DocumentStore
+from pipeline.storage.vector_store import VectorStore
 
 def main():
     st.set_page_config(
@@ -23,15 +25,29 @@ def main():
     
     initialize_session_state()
     
-    # Initialize document tracker
+    # Initialize storage components if not in session state
     if "doc_tracker" not in st.session_state:
         st.session_state.doc_tracker = DocumentTracker()
+    
+    if "doc_store" not in st.session_state:
+        archive_path = Path("data/archived_docs")
+        st.session_state.doc_store = DocumentStore(archive_path)
+    
+    if "vector_store" not in st.session_state:
+        st.session_state.vector_store = VectorStore(
+            persist_directory="chroma_db",
+            collection_name="docs"
+        )
     
     # Load and apply CSS
     st.markdown(load_css(), unsafe_allow_html=True)
     
     # Render ingestion controls in sidebar
-    render_ingestion_sidebar(st.session_state.doc_tracker)
+    render_ingestion_sidebar(
+        tracker=st.session_state.doc_tracker,
+        vector_store=st.session_state.vector_store,
+        doc_store=st.session_state.doc_store
+    )
     
     # Main content area
     with st.container():

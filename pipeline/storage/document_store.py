@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 from datetime import datetime
+from typing import List
 
 class DocumentStore:
     def __init__(self, archive_root: Path):

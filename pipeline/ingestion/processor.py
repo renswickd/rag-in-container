@@ -13,14 +13,24 @@ class DocumentProcessor:
 
     def process_documents(self, documents: List) -> bool:
         """Process documents and add to vector store"""
+        if not documents:
+            print("No documents to process")
+            return False
+            
         try:
             # Split documents into chunks
             chunks = self.splitter.split_documents(documents)
             
+            if not chunks:
+                print("No chunks created from documents")
+                return False
+            
             # Add to vector store
             self.vector_store.add_documents(chunks)
+            print(f"Successfully added {len(chunks)} chunks to vector store")
             
             return True
+            
         except Exception as e:
             print(f"Error processing documents: {e}")
             return False

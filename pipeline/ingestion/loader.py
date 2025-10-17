@@ -12,23 +12,38 @@ class DocumentLoader:
     def load_documents(self, pdf_dir: Path) -> List:
         """Load unprocessed PDF documents"""
         docs = []
-        unprocessed = self.tracker.get_unprocessed_files(pdf_dir)
-        
-        for file_path in sorted(unprocessed):
-            try:
-                loader = PyPDFLoader(str(file_path))
-                documents = loader.load()
-                
-                # Archive the document
-                archived_path = self.doc_store.archive_document(file_path)
-                
-                # Update tracker
-                self.tracker.register_document(file_path, archived_path)
-                
-                docs.extend(documents)
-                
-            except Exception as e:
-                print(f"Error loading {file_path}: {e}")
-                continue
-                
-        return docs
+        try:
+            # Get all PDF files in directory
+            pdf_files = list(pdf_dir.glob("**/temp_uploads/*.pdf"))
+            
+            for file_path in pdf_files:
+                try:
+                    # Load document
+                    loader = PyPDFLoader(str(file_path))
+                    documents = loader.load()
+                    
+                    if documents:
+                        # Archive the document
+                        archived_path = self.doc_store.archive_document(file_path)
+                        
+                        # Update tracker with archived path
+                        self.tracker.register_document(file_path, archived_path)
+                        
+                        # Add metadata to documents
+                        for doc in documents:
+                            doc.metadata.update({
+                                "source": str(file_path.name),
+                                "archived_path": str(archived_path)
+                            })
+                        
+                        docs.extend(documents)
+                        
+                except Exception as e:
+                    print(f"Error loading {file_path}: {e}")
+                    continue
+                    
+            return docs
+            
+        except Exception as e:
+            print(f"Error scanning directory {pdf_dir}: {e}")
+            return []

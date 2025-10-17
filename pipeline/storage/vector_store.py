@@ -25,7 +25,18 @@ class VectorStore:
 
     def add_documents(self, documents: List) -> None:
         """Add documents to vector store"""
-        self.db.add_documents(documents)
+        try:
+            if not documents:
+                raise ValueError("No documents provided")
+                
+            # Add documents and persist
+            self.db.add_documents(documents)
+            # self.db.persist()
+            print(f"Successfully added and persisted {len(documents)} documents")
+            
+        except Exception as e:
+            print(f"Error adding documents to vector store: {e}")
+            raise
 
     def reset(self) -> None:
         """Reset the vector store"""
