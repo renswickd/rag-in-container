@@ -1,32 +1,36 @@
 import streamlit as st
 from pathlib import Path
-from pipeline.document_tracker import DocumentTracker
-from pipeline.ingestion.processor import process_documents
+from pipeline.utils.document_tracker import DocumentTracker
+from pipeline.storage.vector_store import VectorStore
+from pipeline.storage.document_store import DocumentStore
+from pipeline.ingestion.loader import DocumentLoader
+from pipeline.ingestion.processor import DocumentProcessor
 from typing import Optional
 
-def render_ingestion_sidebar(tracker: Optional[DocumentTracker] = None):
+def render_ingestion_sidebar(
+    tracker: DocumentTracker,
+    vector_store: VectorStore,
+    doc_store: DocumentStore
+):
     """Render ingestion controls in the sidebar"""
     with st.sidebar:
         st.header("📁 Document Management")
         
         # Status Section
         st.subheader("Status", divider="gray")
-        total_docs = len(tracker.get_processed_files()) if tracker else 0
-        st.metric("Total Documents", f"{total_docs}")
+        stats = vector_store.get_stats()
+        st.metric("Total Documents", f"{stats['total_documents']}")
         
         # Document List
-        if tracker and total_docs > 0:
+        processed_files = tracker.get_processed_files()
+        if processed_files:
             with st.expander("📑 Processed Documents"):
-                for doc_path in tracker.get_processed_files():
+                for doc_path in processed_files:
                     st.text(Path(doc_path).name)
-        
-        # Controls Section
-        st.subheader("Controls", divider="gray")
         
         # Vector DB Stats
         if st.button("🔄 Refresh Stats"):
-            # Add vector DB stats refresh logic here
-            pass
+            st.experimental_rerun()
         
         # Dangerous Operations
         st.subheader("Maintenance", divider="gray")
@@ -34,5 +38,6 @@ def render_ingestion_sidebar(tracker: Optional[DocumentTracker] = None):
             if st.button("Reset Vector DB", type="primary"):
                 st.warning("This will delete all embedded documents!")
                 if st.button("Confirm Reset"):
-                    # Add reset logic here
+                    vector_store.reset()
                     st.success("Vector DB reset successfully")
+                    st.experimental_rerun()
