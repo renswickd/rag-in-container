@@ -1,15 +1,22 @@
 import os
+from pathlib import Path
 import yaml
-from dotenv import load_dotenv
+from typing import Dict, Any
 
-load_dotenv()
-
-def load_config(path: str = "configs/dev.yaml") -> dict:
-    with open(path, "r") as f:
-        cfg = yaml.safe_load(f)
-    
-    cfg["vector_store"]["persist_directory"] = os.getenv(
-        "CHROMA_DIR", cfg["vector_store"]["persist_directory"]
-    )
-    cfg["embedding"]["model_name"] = os.getenv("EMBED_MODEL", cfg["embedding"]["model_name"])
-    return cfg
+def load_config(config_path: str = "configs/app_config.yaml") -> Dict[str, Any]:
+    """Load application configuration from YAML file"""
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+            
+        # Override with environment variables if set
+        if os.getenv("CHROMA_DIR"):
+            config["vector_store"]["persist_directory"] = os.getenv("CHROMA_DIR")
+            
+        if os.getenv("EMBED_MODEL"):
+            config["vector_store"]["embedding_model"] = os.getenv("EMBED_MODEL")
+            
+        return config
+        
+    except Exception as e:
+        raise RuntimeError(f"Failed to load config from {config_path}: {str(e)}")

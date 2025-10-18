@@ -1,0 +1,39 @@
+# Application Settings
+app:
+  name: "Policy Assistant"
+  icon: "📚"
+  layout: "wide"
+
+# Storage Settings
+storage:
+  document_registry: "data/document_registry.json"
+  archive_dir: "data/archived_docs"
+  temp_dir: "temp_uploads"
+  metadata_csv: "data/metadata/pr_metadata.csv"
+
+# Vector Store Settings
+vector_store:
+  persist_directory: "chroma_db"
+  collection_name: "docs"
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  top_k: 4  # Number of chunks to retrieve
+
+# Document Processing
+processing:
+  chunk_size: 1000
+  chunk_overlap: 200
+
+# Session Management
+session:
+  keep_last: 5
+  prefix: "session-"
+
+# LLM Settings
+llm:
+  model: "openai/gpt-oss-20b"
+  temperature: 0
+  streaming: true
+  max_tokens: 1000
+  model_kwargs:
+    frequency_penalty: 0.0
+    presence_penalty: 0.0

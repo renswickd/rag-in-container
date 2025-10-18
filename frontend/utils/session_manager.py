@@ -1,4 +1,11 @@
 import streamlit as st
+from pathlib import Path
+import sys
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root))
+
 from graphs.policy_graph import build_graph
 from common.logger_util import init_logger
 
