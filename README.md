@@ -59,7 +59,7 @@ mkdir -p chroma_db
 
 1. Start the application:
 ```bash
-streamlit run ui_main.py
+streamlit run app.py
 ```
 
 2. Upload policy documents:
