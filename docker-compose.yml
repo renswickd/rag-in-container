@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  ui:
+    build: .
+    container_name: policy-assistant-ui
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./:/app:rw                    
+      - ./chroma_db:/app/chroma_db    
+      - ./data:/app/data              
+      - ./logs:/app/logs              
+    restart: unless-stopped
+
+  ingest:
+    build: .
+    container_name: policy-assistant-ingest
+    env_file:
+      - .env
+    command: ["python", "-m", "pipeline.ingest_pdfs"]
+    volumes:
+      - ./:/app:rw
+      - ./chroma_db:/app/chroma_db
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: "no"
+    depends_on:
+      - ui

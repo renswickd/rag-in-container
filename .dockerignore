@@ -1,0 +1,24 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+venv/
+.env
+
+# Git + editor
+.git
+.gitignore
+.vscode/
+.idea/
+
+# Data, DB and logs (mounted as volumes instead)
+data/
+chroma_db/
+logs/
+
+# Streamlit caches
+.streamlit/
